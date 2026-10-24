@@ -1,2 +1,2 @@
-# t2c2-techvanta
-Private hackathon repository for TechVanta
+# t2c2-team_asterisk
+Private hackathon repository for Team Asterisk
