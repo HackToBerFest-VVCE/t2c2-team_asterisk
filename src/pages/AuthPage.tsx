@@ -7,7 +7,7 @@ import { Button, Notice } from "../components/ui";
 export function AuthPage() {
   const { user, configured, signIn, signUp } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);

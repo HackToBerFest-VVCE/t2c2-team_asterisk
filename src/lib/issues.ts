@@ -8,6 +8,17 @@ import type {
   StoredContributionGuide,
 } from "../types/domain";
 import { getFunctionErrorMessage } from "./apiErrors";
+import { readMentorApiResponse } from "./mentorApiResponse";
+
+export interface IssueSimplification {
+  problem_plain_english: string;
+  what_needs_to_be_done: string;
+  why_it_matters: string;
+  technical_terms: { term: string; explanation: string }[];
+  expected_outcome: string;
+  acceptance_criteria: string[];
+  generated_by: "ai";
+}
 
 async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
   if (!supabase) {
@@ -40,38 +51,89 @@ export async function getIssue(owner: string, repo: string, number: number): Pro
   return result.issue;
 }
 
-export async function generateContributionGuide(
-  owner: string,
-  repo: string,
-  number: number,
-): Promise<ContributionGuide> {
-  const result = await invoke<{ guide: ContributionGuide }>("contribution-guide", {
-    owner,
-    repo,
-    number,
+export async function simplifyIssue(issue: Pick<GitHubIssue, "owner" | "repository" | "number">): Promise<IssueSimplification> {
+  const result = await invoke<{ simplification: IssueSimplification }>("simplify-issue", {
+    owner: issue.owner,
+    repo: issue.repository,
+    number: issue.number,
   });
-  const guide = result?.guide;
+  const simplification = result.simplification;
+  if (
+    !simplification ||
+    simplification.generated_by !== "ai" ||
+    typeof simplification.problem_plain_english !== "string" ||
+    typeof simplification.what_needs_to_be_done !== "string" ||
+    typeof simplification.why_it_matters !== "string" ||
+    typeof simplification.expected_outcome !== "string" ||
+    !Array.isArray(simplification.technical_terms) ||
+    !simplification.technical_terms.every((item) =>
+      item && typeof item.term === "string" && typeof item.explanation === "string"
+    ) ||
+    !Array.isArray(simplification.acceptance_criteria) ||
+    !simplification.acceptance_criteria.every((item) => typeof item === "string")
+  ) {
+    throw new Error("The issue simplifier returned an invalid response.");
+  }
+  return simplification;
+}
+
+export async function generateContributionGuide(
+  issue: GitHubIssue,
+): Promise<ContributionGuide> {
+  if (!supabase) throw new Error("Connect Supabase before requesting an AI mentor guide.");
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw new Error(`Could not verify your session: ${sessionError.message}`);
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) throw new Error("Sign in to request an AI contribution guide.");
+
+  let response: Response;
+  try {
+    response = await fetch("/api/ai-mentor", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        issueId: issue.id,
+        title: issue.title,
+        body: issue.body,
+        url: issue.html_url,
+        repository: issue.repository_full_name,
+        labels: issue.labels.map((label) => label.name),
+        language: issue.language,
+      }),
+    });
+  } catch {
+    throw new Error("Could not reach the AI mentor API. Check the connection and try again.");
+  }
+  const result = await readMentorApiResponse(response);
+  if (!response.ok) {
+    throw new Error(result.error || `The AI mentor API failed (HTTP ${response.status}).`);
+  }
+  const guide = result.guide;
   if (
     !guide ||
     typeof guide.summary !== "string" ||
-    !Array.isArray(guide.prerequisites) ||
-    !Array.isArray(guide.setup) ||
-    !Array.isArray(guide.steps) ||
-    !Array.isArray(guide.files_to_investigate) ||
-    !Array.isArray(guide.testing) ||
-    !Array.isArray(guide.pull_request) ||
-    !Array.isArray(guide.verify) ||
+    typeof guide.issue_explanation !== "string" ||
+    typeof guide.expected_outcome !== "string" ||
+    !Array.isArray(guide.possible_root_causes) ||
+    !Array.isArray(guide.files_to_inspect) ||
+    !Array.isArray(guide.implementation_steps) ||
+    typeof guide.example_code !== "string" ||
+    !Array.isArray(guide.test_commands) ||
+    !Array.isArray(guide.edge_cases) ||
+    !Array.isArray(guide.pull_request_checklist) ||
+    typeof guide.context_note !== "string" ||
+    guide.repository_verification !== "not_performed" ||
+    (guide.generated_by !== "ai" && guide.generated_by !== "fallback") ||
+    typeof guide.pull_request_explanation !== "string" ||
     !Array.isArray(guide.source_notes) ||
     !guide.links ||
-    typeof guide.links.issue !== "string" ||
-    typeof guide.links.repository !== "string" ||
-    (guide.links.readme !== null && typeof guide.links.readme !== "string") ||
-    (guide.links.contributing !== null && typeof guide.links.contributing !== "string") ||
-    (guide.generated_by !== "ai" && guide.generated_by !== "fallback") ||
-    [...guide.prerequisites, ...guide.setup, ...guide.steps, ...guide.files_to_investigate, ...guide.testing,
-      ...guide.pull_request, ...guide.verify, ...guide.source_notes].some((item) => typeof item !== "string")
+    guide.links.issue !== issue.html_url ||
+    guide.links.repository !== `https://github.com/${issue.repository_full_name}`
   ) {
-    throw new Error("The guide service returned invalid guidance.");
+    throw new Error("The AI mentor API returned an incomplete guide.");
   }
   return guide;
 }

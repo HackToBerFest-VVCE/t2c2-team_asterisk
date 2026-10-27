@@ -35,3 +35,9 @@ jobs:
         run: supabase functions deploy search-issues --project-ref "$SUPABASE_PROJECT_REF"
       - name: Deploy contribution mentor
         run: supabase functions deploy contribution-guide --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Deploy issue simplifier
+        run: supabase functions deploy simplify-issue --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Deploy contribution roadmap
+        run: supabase functions deploy generate-roadmap --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Deploy Skill Gap Analyzer
+        run: supabase functions deploy analyze-skill-gap --project-ref "$SUPABASE_PROJECT_REF"

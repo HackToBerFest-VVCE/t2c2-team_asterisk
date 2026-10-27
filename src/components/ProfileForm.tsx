@@ -18,6 +18,8 @@ export function ProfileForm({
 }) {
   const [languages, setLanguages] = useState((initial?.languages ?? []).join(", "));
   const [skills, setSkills] = useState((initial?.skills ?? []).join(", "));
+  const [skillsToPractice, setSkillsToPractice] = useState((initial?.skills_to_practice ?? []).join(", "));
+  const [projectExperience, setProjectExperience] = useState((initial?.project_experience ?? []).join(", "));
   const [experience, setExperience] = useState<ExperienceLevel>(initial?.experience_level ?? "beginner");
   const [interests, setInterests] = useState((initial?.interests ?? []).join(", "));
   const [projectTypes, setProjectTypes] = useState((initial?.project_types ?? []).join(", "));
@@ -45,6 +47,8 @@ export function ProfileForm({
       await onSave({
         languages: languageList,
         skills: splitList(skills),
+        skills_to_practice: splitList(skillsToPractice),
+        project_experience: splitList(projectExperience),
         experience_level: experience,
         interests: splitList(interests),
         project_types: splitList(projectTypes),
@@ -72,6 +76,14 @@ export function ProfileForm({
         <div className="field">
           <label htmlFor="skills">Skills and tools</label>
           <input id="skills" value={skills} onChange={(event) => setSkills(event.target.value)} placeholder="React, testing, documentation" />
+        </div>
+        <div className="field">
+          <label htmlFor="skills-to-practice">Skills to practice or learn</label>
+          <input id="skills-to-practice" value={skillsToPractice} onChange={(event) => setSkillsToPractice(event.target.value)} placeholder="Docker, accessibility testing" />
+        </div>
+        <div className="field">
+          <label htmlFor="project-experience">Relevant project experience</label>
+          <input id="project-experience" value={projectExperience} onChange={(event) => setProjectExperience(event.target.value)} placeholder="Built a React dashboard, contributed docs to a Python library" />
         </div>
         <div className="field">
           <label htmlFor="experience">Experience level</label>

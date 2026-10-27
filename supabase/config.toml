@@ -3,3 +3,12 @@ verify_jwt = false
 
 [functions.contribution-guide]
 verify_jwt = true
+
+[functions.simplify-issue]
+verify_jwt = true
+
+[functions.generate-roadmap]
+verify_jwt = true
+
+[functions.analyze-skill-gap]
+verify_jwt = true

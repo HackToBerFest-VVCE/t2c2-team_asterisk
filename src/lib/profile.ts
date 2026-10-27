@@ -17,6 +17,8 @@ export async function getProfile(user: User): Promise<DeveloperProfile | null> {
         id: data.id,
         languages: data.languages ?? [],
         skills: data.skills ?? [],
+        skills_to_practice: data.skills_to_practice ?? [],
+        project_experience: data.project_experience ?? [],
         experience_level: data.experience_level as ExperienceLevel,
         interests: data.interests ?? [],
         project_types: data.project_types ?? [],

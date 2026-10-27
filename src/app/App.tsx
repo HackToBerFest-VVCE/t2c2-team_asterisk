@@ -12,11 +12,18 @@ import { IssueDetailPage } from "../pages/IssueDetailPage";
 import { MentorPage } from "../pages/MentorPage";
 import { SavedPage } from "../pages/SavedPage";
 import { ProfilePage } from "../pages/ProfilePage";
+import { SimplifierPage } from "../pages/SimplifierPage";
 
 function ProtectedRoute() {
   const { user, loading } = useAuth();
   if (loading) return <LoadingState label="Restoring your session..." />;
   return user ? <Outlet /> : <Navigate to="/auth" replace />;
+}
+
+function HomeRoute() {
+  const { user, loading } = useAuth();
+  if (loading) return <LoadingState label="Restoring your session..." />;
+  return <Navigate to={user ? "/dashboard" : "/auth"} replace />;
 }
 
 function AppLayout() {
@@ -29,7 +36,7 @@ function AppLayout() {
     setNavError("");
     try {
       await signOut();
-      navigate("/");
+      navigate("/auth");
     } catch (error) {
       setNavError(error instanceof Error ? error.message : "Could not sign out.");
     }
@@ -39,6 +46,7 @@ function AppLayout() {
     ? [
         ["Dashboard", "/dashboard"],
         ["Explore issues", "/explore"],
+        ["Simplify issue", "/simplify"],
         ["Saved", "/saved"],
         ["Profile", "/profile"],
       ]
@@ -92,13 +100,15 @@ export default function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
-        <Route index element={<LandingPage />} />
+        <Route index element={<HomeRoute />} />
+        <Route path="welcome" element={<LandingPage />} />
         <Route path="auth" element={<AuthPage />} />
         <Route path="explore" element={<ExplorerPage />} />
         <Route path="issues/:owner/:repo/:number" element={<IssueDetailPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="onboarding" element={<OnboardingPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="simplify" element={<SimplifierPage />} />
           <Route path="mentor/:owner/:repo/:number" element={<MentorPage />} />
           <Route path="saved" element={<SavedPage />} />
           <Route path="profile" element={<ProfilePage />} />

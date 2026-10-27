@@ -4,6 +4,8 @@ export interface DeveloperProfile {
   id: string;
   languages: string[];
   skills: string[];
+  skills_to_practice: string[];
+  project_experience: string[];
   experience_level: ExperienceLevel;
   interests: string[];
   project_types: string[];
@@ -106,4 +108,72 @@ export interface ContributionGuide {
     contributing: string | null;
   };
   generated_by: "ai" | "fallback";
+  issue_explanation?: string;
+  pull_request_explanation?: string;
+  expected_outcome?: string;
+  solution_approach?: string;
+  repository_setup_workflow?: string[];
+  possible_root_causes?: string[];
+  files_to_inspect?: string[];
+  implementation_steps?: string[];
+  example_code?: string;
+  test_commands?: string[];
+  edge_cases?: string[];
+  pull_request_checklist?: string[];
+  context_note?: string;
+  repository_verification?: "not_performed";
+}
+
+export interface ContributionRoadmapStep {
+  title: string;
+  explanation: string;
+  tasks: string[];
+  completed: boolean;
+}
+
+export interface ContributionRoadmap {
+  steps: ContributionRoadmapStep[];
+  generated_by: "ai";
+  suggestions_unverified: true;
+}
+
+export interface SavedContributionRoadmap {
+  id: string;
+  user_id: string;
+  issue_id: number;
+  owner: string;
+  repository: string;
+  issue_number: number;
+  issue_title: string;
+  issue_url: string;
+  roadmap: ContributionRoadmap;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SkillGapStatus = "Known" | "Needs Practice" | "Learn";
+export type SkillGapConfidence = "High" | "Medium" | "Low";
+
+export interface SkillGapItem {
+  name: string;
+  status: SkillGapStatus;
+  confidence: SkillGapConfidence;
+  why_relevant: string;
+  profile_note: string;
+}
+
+export interface SkillPreparationStep {
+  skill: string;
+  topic: string;
+  exercise: string;
+  documentation: { label: string; url: string }[];
+}
+
+export interface SkillGapAnalysis {
+  skills: SkillGapItem[];
+  recommended_preparation: SkillPreparationStep[];
+  difficulty: {
+    level: "Beginner" | "Intermediate" | "Advanced";
+    explanation: string;
+  };
 }
